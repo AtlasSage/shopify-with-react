@@ -1,16 +1,8 @@
-import { useState, useEffect } from 'react'
+import { compose, get, map } from 'lodash/fp'
 
-export const usePromise = promise => {
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    Promise.resolve(promise)
-      .then(setResult)
-      .catch(setError)
-      .finally(() => setIsLoading(false))
-  }, [])
-
-  return { result, error, isLoading }
-}
+// Returns an array of nodes from the connection data provided as a result of a
+// GraphQL query.
+export const getNodes = compose(
+  map('node'),
+  get('edges')
+)
