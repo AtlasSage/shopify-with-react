@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import ApolloClient from 'apollo-boost'
 import {
   ApolloProvider,
@@ -43,8 +43,6 @@ import { MutationCustomerReset } from './graphql/MutationCustomerReset'
 import { MutationCustomerResetByUrl } from './graphql/MutationCustomerResetByUrl'
 import { MutationCustomerUpdate } from './graphql/MutationCustomerUpdate'
 
-const ShopifyApolloContext = React.createContext()
-
 /***
  * ShopifyProvider
  *
@@ -56,18 +54,15 @@ export const ShopifyProvider = ({
   shopName,
   storefrontAccessToken,
 }) => {
-  const apolloClient = new ApolloClient({
-    uri: `https://${shopName}.myshopify.com/api/graphql`,
-    headers: {
-      'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
-    },
-  })
+  if (!client)
+    client = new ApolloClient({
+      uri: `https://${shopName}.myshopify.com/api/graphql`,
+      headers: {
+        'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+      },
+    })
 
-  return (
-    <ShopifyApolloContext.Provider value={client || apolloClient}>
-      {children}
-    </ShopifyApolloContext.Provider>
-  )
+  return <ApolloProvider client={client}>{children}</ApolloProvider>
 }
 
 /***
@@ -75,7 +70,7 @@ export const ShopifyProvider = ({
  *
  * Returns direct access to the Apollo client for arbitrary query execution.
  */
-export const useShopifyApolloClient = () => useContext(ShopifyApolloContext)
+export { useApolloClient as useShopifyApolloClient }
 
 /***
  * useShopifyProduct
@@ -83,19 +78,12 @@ export const useShopifyApolloClient = () => useContext(ShopifyApolloContext)
  * Provides product data for a given product ID.
  */
 export const useShopifyProduct = id => {
-  const client = useShopifyApolloClient()
-  const { data, ...rest } = client.query({
-    query: QueryProductNode,
+  const { data, ...rest } = useQuery(QueryProductNode, {
     variables: { id },
+    suspend: false,
   })
 
   return { product: get('node', data), ...rest }
-
-  // const { data, error } = useQuery(QueryProductNode, {
-  //   variables: { id },
-  // })
-
-  // return { product: get('node', data), error }
 }
 
 /***
