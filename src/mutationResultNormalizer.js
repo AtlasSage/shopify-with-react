@@ -9,16 +9,14 @@ export const mutationResultNormalizer = curry(
     // Different mutations use different error names, so normalize to a single
     // name.
     const errors =
-      root.checkoutUserErrors ||
-      root.customerUserErrors ||
-      root.userErrors ||
+      get('checkoutUserErrors', root) ||
+      get('customerUserErrors', root) ||
+      get('userErrors', root) ||
       []
 
-    // If the resource path is present, return that data. If not, return true
-    // if no errors, false otherwise.
-    const data = has(resourcePath, root)
-      ? get(resourcePath, root)
-      : isEmpty(errors)
+    // If a resource path is not defined, return undefined since Shopify does
+    // not provide any meaningful return data for this mutation.
+    const data = resourcePath ? get(resourcePath, root) : undefined
 
     return { data, errors }
   }
